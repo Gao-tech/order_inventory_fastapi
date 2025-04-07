@@ -3,7 +3,7 @@ from fastapi import FastAPI, HTTPException, Path, Response, APIRouter, Depends, 
 from sqlalchemy import select
 from app.models import User, UserCreate, UserShow
 from app.db import Session, get_session
-from ..app import utils
+from ..import utils
 
 
 router = APIRouter(tags=["Users"])

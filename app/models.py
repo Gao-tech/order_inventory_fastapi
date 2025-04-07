@@ -8,7 +8,7 @@ from pydantic.types import conint
 from sqlalchemy import JSON, UUID, Column, Index
 from sqlmodel import Field, SQLModel, Relationship
 from geopy.distance import geodesic
-from pydantic.types import conint
+from pydantic import ConfigDict
 
 class Warehouse(str, Enum):
     MALMO = "Malmö (55.6094, 12.9847)"
@@ -23,28 +23,46 @@ class Category(str, Enum):
 
 
 class Series(str, Enum):
-    SABOVIK = "SÄBÖVIK"
-    VIMLE = "VIMLE"
-    SKANSNAS = "SKANSNÄS"
+    SABOVIK = "säbövik"
+    VIMLE = "vimle"
+    SKANSNAS = "skansnäs"
 
-class WarehouseAddress(int, Enum):
+class WarehouseAddress(str, Enum):
     HOVDINGEVAGEN = "Hövdingevägen (55.55225871167352, 12.985213183922493)"    # Malmö
     MARKNADSVAGEN = "Marknadsvägen (56.092430690778045, 12.76271609744993)"    # Helsingbor
     HANDELSVAGEN = "Handelsvägen （56.55169461274043, 14.157970024464651）"  # Älmhult
 
+
 class Warehouse(SQLModel, table=True):
-    id: str = Field(primary_key=True)  # e.g., "malmo", "helsingborg"
+    warehouse_id: str = Field(primary_key=True)  # Renamed from "id"
     name: str
-    allows_self_service: bool = False  # Can users pick up here?
-    served_zipcodes: list[str] = Field(default=[], sa_column=Column(JSON))  # ["21109", "21216"]
+    allows_self_service: bool = False
+    served_zipcodes: list[str] = Field(default=[], sa_column=Column(JSON))
+    stocks: list["Stock"] = Relationship(back_populates="warehouse")
+
+class WarehouseCreate(SQLModel):
+    warehouse_id: str
+    name: str
+    allows_self_service: bool
+    served_zipcodes: list[str]
+    
+class WarehouseRead(SQLModel):
+    id: str
+    name: str
+    allows_self_service: bool
+    served_zipcodes: list[str]
+
+    class Config:  # SQLModel/Pydantic v1 syntax
+        orm_mode = True  # Critical for ORM->Pydantic conversion
+
 
 class Stock(SQLModel, table=True):
     product_id: str = Field(foreign_key="product.id", primary_key=True)
+    warehouse_id: str = Field(foreign_key="warehouse.warehouse_id", primary_key=True)
     quantity: int = Field(default=0)
-    warehouse_id: str = Field(foreign_key="warehouse.id", primary_key=True)
-
-    warehouse: Optional[Warehouse] = Relationship()  # Composite primary key
     product: Optional['Product'] = Relationship(back_populates="stock")
+    warehouse: Optional[Warehouse] = Relationship(back_populates="stocks")  # Correct back-populates
+    
 
 class Product(SQLModel, table=True):
     id: str = Field(primary_key=True, description="IKEA article number")  # 40309870
@@ -52,8 +70,9 @@ class Product(SQLModel, table=True):
     category: Category
     price: float
     series: Optional[Series] = None
-
     stock: list['Stock'] = Relationship(back_populates="product")
+    order_items: Optional['OrderItem'] = Relationship(back_populates="product") # lookup: which orders contain this product
+
 
 class StockOut(SQLModel):  # show on the website
     warehouse_id: str
@@ -97,26 +116,66 @@ class UserShow(UserBase):
 class User(UserBase, table=True): # reserved when querying, use "user"
     id: int = Field(default=None, primary_key=True)
     password: str = Field(nullable=False)
+    role: str = Field(default="user")
 
-class ShippingRule(SQLModel, table=True):
-    from_warehouse: Warehouse = Field(primary_key=True)
-    to_zipcode_group: str = Field(primary_key=True)  # "Malmö", "Helsingborg", "Älmhult"
-    cost: int
-
-
+    
 class Order(SQLModel, table=True):
-    id: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
+    uuid: str = Field(default_factory=lambda: str(uuid.uuid4()), primary_key=True)
     user_zipcode: str
     delivery_method: DeliveryMethod
-    cost: int  # 50, 400, or 800
-    created_at: datetime = Field(default_factory=datetime.now)
-    arrival_date: datetime
+    cost: int
+    total_price: float  # Total product costs
+    created_at: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))
+    arrival_date: datetime.datetime
+    warehouse_id: Optional[str]
+    user_id: int | None = Field(default=None, foreign_key="user.id", nullable=True)
     items: list["OrderItem"] = Relationship(back_populates="order")
-    
+
+    class Config:
+        arbitrary_types_allowed = True
 
 class OrderItem(SQLModel, table=True):
-    order_id: UUID = Field(foreign_key="order.id", primary_key=True)
+    order_id: str = Field(foreign_key="order.uuid", primary_key=True)
     product_id: str = Field(foreign_key="product.id", primary_key=True)
     quantity: int
-    # Relationships
+    price_at_order: float
+
     order: Optional[Order] = Relationship(back_populates="items")
+    product: Optional[Product] = Relationship(back_populates="order_items")
+    
+    class Config:
+        arbitrary_types_allowed = True
+
+class OrderItemCreate(SQLModel):
+    product_id: str
+    quantity: int
+
+class OrderCreate(SQLModel):
+    user_zipcode: str
+    delivery_method: DeliveryMethod
+    warehouse_id: str
+    items: list[OrderItem]
+
+class OrderOut(SQLModel): # Response model
+    uuid: str
+    user_zipcode: str
+    delivery_method: DeliveryMethod
+    cost: int
+    total_price: float
+    created_at: datetime.datetime
+    arrival_date: datetime.datetime
+    warehouse_id: Optional[str]
+    items: list[OrderItemCreate]
+    class Config:
+       orm_mode = True
+
+class UserLogin(SQLModel):
+    email: EmailStr
+    password: str
+
+class Token(SQLModel):
+    access_token : str
+    token_type: str
+
+class TokenData(BaseModel):
+    id: int | None = None
