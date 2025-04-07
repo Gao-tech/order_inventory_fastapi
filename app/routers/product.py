@@ -11,21 +11,6 @@ from sqlalchemy.orm import selectinload
 router = APIRouter(tags=['Products']) 
 
 
-PRODUCTS_MAL = [
-    {'id': "40309870", 'category': 'BED & MA', 'name': 'beds', 'price': 300, 'location': 'Hövdingevägen', 'stock': 5, 'serie': 'SÄBÖVIK'},
-    {'id': "19399033", 'category': 'Sofas & armchairs', 'name': 'sofas', 'price': 400, 'location': 'Hövdingevägen', 'stock': 10,'serie': 'VIMLE'},
-    {'id': "09561633", 'category': 'Tables & chairs', 'name': 'Dining furniture', 'price': 1000, 'location': 'Hövdingevägen', 'stock': 5, 'serie':'SKANSNÄS '},
-]
-
-PRODUCTS_HEL = [
-    {'id': "40309870", 'category': 'BED & MA', 'name': 'beds', 'price': 300, 'location': 'Marknadsvägen', 'stock': 30, 'serie': 'SÄBÖVIK'},
-    {'id': "19399033", 'category': 'Sofas & armchairs', 'name': 'sofas', 'price': 400, 'location': 'Marknadsvägen', 'stock': 10,'serie': 'VIMLE'},
-    {'id': "09561633", 'category': 'Tables & chairs', 'name': 'Dining furniture', 'price': 1000, 'location': 'Marknadsvägen', 'stock': 10, 'serie':'SKANSNÄS '},
-]
-
-@router.post('/warehouses/init', status_code=status.HTTP_201_CREATED, response_model=Warehouse)
-
-
 @router.get('/products', response_model=list[Product])
 async def get_products(session: Session=Depends(get_session)) ->list[Product]:
     products = session.exec(select(Product)).all()

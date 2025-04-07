@@ -3,7 +3,7 @@ from fastapi import FastAPI, APIRouter, Path, Query, Response, status, HTTPExcep
 # from sqlalchemy import delete, func
 from ..models import DeliveryMethod, Order, OrderCreate, OrderItem, OrderOut, Stock, User, Product
 from sqlmodel import Session, select
-from typing import Annotated
+from typing import Annotated, Optional
 from ..db import get_session
 from ..oauth2 import get_current_user
 from sqlalchemy.orm import selectinload
@@ -16,8 +16,11 @@ def calculate_arrival_date(created_at: datetime.datetime) -> datetime:
 
 @router.post("/orders", response_model=OrderOut)
 def create_order(order_data: OrderCreate,
+                 current_user: Optional[User] = Depends(get_current_user),
                  session: Session = Depends(get_session)) -> Order:
     
+
+
     # Calculate total product price
     total = 0.0
     items_to_save = []
@@ -63,7 +66,8 @@ def create_order(order_data: OrderCreate,
         total_price=total,
         created_at=created_at,  # Add this field
         arrival_date=arrival_date,
-        warehouse_id=order_data.warehouse_id
+        warehouse_id=order_data.warehouse_id,
+        user_id=current_user.id if current_user else None  #make guest user and login user both can make order
     )
     session.add(new_order)
     session.flush()  # Ensure the new_order.uuid is generated and persisted in DB
@@ -94,15 +98,15 @@ def create_order(order_data: OrderCreate,
     return new_order
 
 
-# #Only login user can get own order    
-# @router.get("/orders", response_model=OrderOut)
-# def get_my_orders(order_id: Annotated[str, Path(title="The Order ID")],
-#                   session: Session = Depends(get_session)
-#                   #current_user: User = Depends(get_current_user)
-#                   ) -> Order:
-
-#     # orders = session.exec(select(Order).where(Order.user_id == current_user.id)).all()
-
-#     orders = session.exec(select(Order).where(Order.uuid ==order_id)).all()
-#     return orders
-
+#login user get all its own orders
+@router.get("/orders", response_model=list[OrderOut])
+def create_order(
+    session: Session = Depends(get_session),
+    current_user: Optional[User] = Depends(get_current_user)  # Optional dependency
+):
+    orders = session.exec(select(Order).where(Order.user_id == current_user.id)).all()
+    
+    if not orders:
+        raise HTTPException(status_code=404, detail="No orders found")
+    
+    return orders

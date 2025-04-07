@@ -38,4 +38,3 @@ async def get_users(
 
 
 
-# check user's number of votes

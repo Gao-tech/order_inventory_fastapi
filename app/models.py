@@ -62,7 +62,6 @@ class Stock(SQLModel, table=True):
     quantity: int = Field(default=0)
     product: Optional['Product'] = Relationship(back_populates="stock")
     warehouse: Optional[Warehouse] = Relationship(back_populates="stocks")  # Correct back-populates
-    
 
 class Product(SQLModel, table=True):
     id: str = Field(primary_key=True, description="IKEA article number")  # 40309870
@@ -72,7 +71,6 @@ class Product(SQLModel, table=True):
     series: Optional[Series] = None
     stock: list['Stock'] = Relationship(back_populates="product")
     order_items: Optional['OrderItem'] = Relationship(back_populates="product") # lookup: which orders contain this product
-
 
 class StockOut(SQLModel):  # show on the website
     warehouse_id: str
@@ -128,7 +126,7 @@ class Order(SQLModel, table=True):
     created_at: datetime.datetime = Field(default_factory=lambda: datetime.datetime.now(datetime.timezone.utc))
     arrival_date: datetime.datetime
     warehouse_id: Optional[str]
-    user_id: int | None = Field(default=None, foreign_key="user.id", nullable=True)
+    user_id: Optional[int] = Field(default=None, foreign_key="user.id", nullable=True)
     items: list["OrderItem"] = Relationship(back_populates="order")
 
     class Config:
