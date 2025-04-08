@@ -1,0 +1,11 @@
+version = 0.1
+[default.deploy.parameters]
+stack_name = "dev"
+resolve_s3 = true
+s3_prefix = "dev"
+region = "eu-north-1"
+profile = "default"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "DBName=\"order_inventory_fastapi\" VpcId=\"\" SubnetIds=\"\""
+image_repositories = []
+disable_rollback = true
