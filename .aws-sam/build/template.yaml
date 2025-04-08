@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: IKEA-like Order Inventory System with RDS PostgreSQL
+Parameters:
+  DBUsername:
+    Type: String
+    Default: admin
+    NoEcho: true
+  DBPassword:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: RDS master password (min 8 characters)
+  DBName:
+    Type: String
+    Default: ikea_inventory
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: Select your VPC
+  SubnetIds:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Select at least two private subnets
+Globals:
+  Function:
+    Timeout: 30
+    Runtime: python3.12
+    MemorySize: 512
+    Environment:
+      Variables:
+        ENV: production
+Resources:
+  DBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow database access from Lambda
+      VpcId:
+        Ref: VpcId
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Lambda to access RDS
+      VpcId:
+        Ref: VpcId
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 5432
+        ToPort: 5432
+        SourceSecurityGroupId:
+          Fn::GetAtt:
+          - DBSecurityGroup
+          - GroupId
+  InventoryDB:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      AllocatedStorage: 20
+      DBInstanceClass: db.t3.micro
+      Engine: postgres
+      EngineVersion: '15.4'
+      MasterUsername:
+        Ref: DBUsername
+      MasterUserPassword:
+        Ref: DBPassword
+      DBName:
+        Ref: DBName
+      VPCSecurityGroups:
+      - Fn::GetAtt:
+        - DBSecurityGroup
+        - GroupId
+      PubliclyAccessible: false
+      StorageType: gp2
+      MultiAZ: false
+  OrderInventoryApi:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: order-inventory-fastapi
+      Handler: app.main.handler
+      CodeUri: OrderInventoryApi
+      Layers:
+      - Ref: AppDependenciesLayer
+      - arn:aws:lambda:eu-north-1:898466741470:layer:psycopg2-py38:85
+      VpcConfig:
+        SecurityGroupIds:
+        - Fn::GetAtt:
+          - LambdaSecurityGroup
+          - GroupId
+        SubnetIds:
+          Ref: SubnetIds
+      Environment:
+        Variables:
+          DB_HOST:
+            Fn::GetAtt:
+            - InventoryDB
+            - Endpoint.Address
+          DB_PORT:
+            Fn::GetAtt:
+            - InventoryDB
+            - Endpoint.Port
+          DB_NAME:
+            Ref: DBName
+          DB_USER:
+            Ref: DBUsername
+          DB_PASSWORD:
+            Ref: DBPassword
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+    Metadata:
+      SamResourceId: OrderInventoryApi
+  AppDependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: fastapi-dependencies
+      Description: FastAPI and SQLModel dependencies
+      ContentUri: ../../layer
+      CompatibleRuntimes:
+      - python3.12
+Outputs:
+  ApiEndpoint:
+    Description: API Gateway endpoint URL
+    Value:
+      Fn::Sub: https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/
+  DatabaseEndpoint:
+    Description: RDS Connection Endpoint
+    Value:
+      Fn::GetAtt:
+      - InventoryDB
+      - Endpoint.Address
