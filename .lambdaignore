@@ -1,0 +1,12 @@
+venv/
+tests/
+.git/
+__pycache__
+*.log
+*.md
+*.toml
+*.yml
+*.yaml
+*.zip
+!template.yaml
+!requirements.txt

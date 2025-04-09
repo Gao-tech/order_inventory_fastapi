@@ -60,7 +60,7 @@ Resources:
       AllocatedStorage: 20
       DBInstanceClass: db.t3.micro
       Engine: postgres
-      EngineVersion: "15.3"
+      EngineVersion: "15.7"
       MasterUsername: !Ref DBUsername
       MasterUserPassword: !Ref DBPassword
       DBName: !Ref DBName
@@ -70,6 +70,15 @@ Resources:
       StorageType: gp2
       MultiAZ: false
 
+  Psycopg2Layer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: psycopg2-layer
+      ContentUri: layer/psycopg2-layer.zip
+      CompatibleRuntimes:
+        - python3.12
+      RetentionPolicy: Delete
+
   # Lambda Function
   OrderInventoryApi:
     Type: AWS::Serverless::Function
@@ -78,8 +87,8 @@ Resources:
       Handler: app.main.handler
       CodeUri: src/
       Layers:
-        - !Ref AppDependenciesLayer
-        - arn:aws:lambda:eu-north-1:898466741470:layer:psycopg2-py38:85
+        - !Ref Psycopg2Layer
+        # - !Ref AppDependenciesLayer
       VpcConfig:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
@@ -103,7 +112,7 @@ Resources:
     Properties:
       LayerName: fastapi-dependencies
       Description: "FastAPI and SQLModel dependencies"
-      ContentUri: layer/
+      ContentUri: layer/fastapi-deps-layer.zip
       CompatibleRuntimes:
         - python3.12
 
