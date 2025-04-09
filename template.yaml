@@ -112,7 +112,7 @@ Resources:
     Properties:
       LayerName: fastapi-dependencies
       Description: "FastAPI and SQLModel dependencies"
-      ContentUri: layer/fastapi-deps-layer.zip
+      ContentUri: layer/
       CompatibleRuntimes:
         - python3.12
 

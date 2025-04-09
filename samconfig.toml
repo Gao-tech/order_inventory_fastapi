@@ -1,7 +1,6 @@
 version = 0.1
 [default.deploy.parameters]
 stack_name = "dev"
-
 s3_prefix = "dev"
 region = "eu-north-1"
 profile = "default"
@@ -10,3 +9,4 @@ parameter_overrides = "DBName=\"order_inventory_fastapi\" VpcId=\"vpc-024a655caf
 image_repositories = []
 disable_rollback = true
 confirm_changeset = true
+
