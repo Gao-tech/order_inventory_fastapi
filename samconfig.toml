@@ -6,6 +6,7 @@ s3_prefix = "dev"
 region = "eu-north-1"
 profile = "default"
 capabilities = "CAPABILITY_IAM"
-parameter_overrides = "DBName=\"order_inventory_fastapi\" VpcId=\"\" SubnetIds=\"\""
+parameter_overrides = "DBName=\"order_inventory_fastapi\" VpcId=\"vpc-024a655cafb2368b1\" SubnetIds=\"subnet-0537b9d0c4302acac,subnet-016accb336476c651\""
 image_repositories = []
 disable_rollback = true
+confirm_changeset = true
