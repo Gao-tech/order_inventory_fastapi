@@ -1,8 +1,8 @@
 from typing import Annotated
 from fastapi import FastAPI, HTTPException, Path, APIRouter, Depends, status
 from sqlalchemy import select
-from app.models import User, UserCreate, UserShow
-from app.db import Session, get_session
+from ..models import User, UserCreate, UserShow
+from ..db import Session, get_session
 from ..import utils
 
 
