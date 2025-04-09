@@ -88,7 +88,7 @@ Resources:
       CodeUri: src/
       Layers:
         - !Ref Psycopg2Layer
-        # - !Ref AppDependenciesLayer
+        - !Ref AppDependenciesLayer
       VpcConfig:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId

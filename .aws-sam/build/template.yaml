@@ -87,6 +87,7 @@ Resources:
       CodeUri: OrderInventoryApi
       Layers:
       - Ref: Psycopg2Layer
+      - Ref: AppDependenciesLayer
       VpcConfig:
         SecurityGroupIds:
         - Fn::GetAtt:

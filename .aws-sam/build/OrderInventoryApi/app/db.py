@@ -3,11 +3,6 @@ from .config import settings
 # DATABASE_URL = 'postgresql://<username>:<password>@<ip-address/hostname><port>/<database_name>'
 # DATABASE_URL = 'postgresql://postgres:root@localhost:5432/voting_fastapi'
 
-# DATABASE_URL = (
-#     f'postgresql://{settings.database_username}:{settings.database_password}@{
-#         settings.database_hostname}:{settings.database_port}/{settings.database_name}'
-#         )
-
 
 engine = create_engine(settings.database_url, echo=True)
 
