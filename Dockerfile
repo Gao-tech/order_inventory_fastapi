@@ -5,11 +5,12 @@ RUN dnf install -y postgresql15-devel gcc python3-devel && dnf clean all
 
 # Install Python dependencies first for layer caching
 RUN pip install \
-    psycopg2-binary==2.9.10 \
-    fastapi==0.115.2 \
-    sqlmodel==0.0.24 \
-    mangum==0.19.0\
-    "pydantic[email]==1.10.15"
+    "fastapi==0.109.0" \
+    "pydantic==1.10.15" \
+    "sqlmodel==0.0.24" \
+    "mangum==0.19.0" \
+    "psycopg2-binary==2.9.9"
+
 
 # Copy application code
 COPY src/ ${LAMBDA_TASK_ROOT}

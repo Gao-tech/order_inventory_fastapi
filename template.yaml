@@ -64,7 +64,7 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       MemorySize: 1024  
-      Timeout: 90      
+      Timeout: 840      
       FunctionName: order-inventory-fastapi
       PackageType: Image
       ImageUri: 585008049375.dkr.ecr.eu-north-1.amazonaws.com/order-inventory:20250410120016
