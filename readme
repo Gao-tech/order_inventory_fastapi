@@ -1,0 +1,48 @@
+# 🛠️ Order Inventory FastAPI
+
+[![GitHub Actions](https://github.com/Gao-tech/order_inventory_fastapi/actions/workflows/deploy.yml/badge.svg)](https://github.com/Gao-tech/order_inventory_fastapi/actions)
+
+A modern inventory management API supporting both SQL (PostgreSQL) and NoSQL (DynamoDB) backends, designed for serverless AWS deployments.
+
+## Features
+
+- ✅ FastAPI endpoints for product/order management
+- 🔄 Dual database support (PostgreSQL + DynamoDB)
+- 🐳 Dockerized Lambda deployment
+- 🔒 VPC security with RDS integration
+- 📈 Auto-scaling serverless architecture
+
+## Quick Start
+
+```bash
+git clone https://github.com/Gao-tech/order_inventory_fastapi.git
+cd order_inventory_fastapi
+
+# Local setup
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+# AWS deployment
+sam build
+sam deploy --guided --resolve-image-repos
+
+
+API Examples
+
+POST /products
+Content-Type: application/json
+
+{
+  "id": "09561633",
+  "name": "Table and chairs",
+  "category": "Dining Furniture",
+  "price": 1700.00
+}
+
+Configuration
+
+DB_HOST=your-rds-endpoint
+DB_NAME=inventory_db
+AWS_REGION=eu-north-1
+```
