@@ -70,25 +70,22 @@ Resources:
       StorageType: gp2
       MultiAZ: false
 
-  Psycopg2Layer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      # LayerName: psycopg2-layer
-      ContentUri: layer/psycopg2-layer.zip
-      CompatibleRuntimes:
-        - python3.12
-      RetentionPolicy: Delete
+  # Psycopg2Layer:
+  #   Type: AWS::Serverless::LayerVersion
+  #   Properties:
+  #     # LayerName: psycopg2-layer
+  #     ContentUri: layer/psycopg2-layer.zip
+  #     CompatibleRuntimes:
+  #       - python3.12
+  #     RetentionPolicy: Delete
 
   # Lambda Function
   OrderInventoryApi:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: order-inventory-fastapi
-      Handler: app.main.handler
-      CodeUri: src/
-      Layers:
-        - !Ref Psycopg2Layer
-        - !Ref AppDependenciesLayer
+      PackageType: Image
+      ImageUri: 585008049375.dkr.ecr.eu-north-1.amazonaws.com/order-inventory:latest
       VpcConfig:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
@@ -106,15 +103,15 @@ Resources:
             Path: /{proxy+}
             Method: ANY
 
-  # Dependencies Layer
-  AppDependenciesLayer:
-    Type: AWS::Serverless::LayerVersion
-    Properties:
-      LayerName: fastapi-dependencies
-      Description: "FastAPI and SQLModel dependencies"
-      ContentUri: layer/fastapi-deps-layer.zip
-      CompatibleRuntimes:
-        - python3.12
+  # # Dependencies Layer
+  # AppDependenciesLayer:
+  #   Type: AWS::Serverless::LayerVersion
+  #   Properties:
+  #     LayerName: fastapi-dependencies
+  #     Description: "FastAPI and SQLModel dependencies"
+  #     ContentUri: layer/fastapi-deps-layer.zip
+  #     CompatibleRuntimes:
+  #       - python3.12
 
 Outputs:
   ApiEndpoint:
