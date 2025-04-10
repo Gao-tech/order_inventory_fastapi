@@ -10,7 +10,7 @@ Parameters:
   DBPassword:
     Type: String
     NoEcho: true
-    MinLength: 8
+    MinLength: "8" 
     Description: "RDS master password (min 8 characters)"
   DBName:
     Type: String
@@ -73,7 +73,7 @@ Resources:
   Psycopg2Layer:
     Type: AWS::Serverless::LayerVersion
     Properties:
-      LayerName: psycopg2-layer
+      # LayerName: psycopg2-layer
       ContentUri: layer/psycopg2-layer.zip
       CompatibleRuntimes:
         - python3.12
