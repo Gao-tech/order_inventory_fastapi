@@ -4,43 +4,26 @@ Description: IKEA-like Order Inventory System with RDS PostgreSQL
 Parameters:
   DBUsername:
     Type: String
-    Default: admin
+    Default: dbemanager
     NoEcho: true
   DBPassword:
     Type: String
     NoEcho: true
     MinLength: '8'
-    Description: RDS master password (min 8 characters)
   DBName:
     Type: String
     Default: ikea_inventory
   VpcId:
     Type: AWS::EC2::VPC::Id
     Default: vpc-024a655cafb2368b1
-    Description: Select your VPC
   SubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
     Default: subnet-0537b9d0c4302acac,subnet-016accb336476c651
-    Description: Select at least two private subnets
-Globals:
-  Function:
-    Timeout: 30
-    Runtime: python3.12
-    MemorySize: 512
-    Environment:
-      Variables:
-        ENV: production
 Resources:
   DBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: Allow database access from Lambda
-      VpcId:
-        Ref: VpcId
-  LambdaSecurityGroup:
-    Type: AWS::EC2::SecurityGroup
-    Properties:
-      GroupDescription: Allow Lambda to access RDS
       VpcId:
         Ref: VpcId
       SecurityGroupIngress:
@@ -49,8 +32,14 @@ Resources:
         ToPort: 5432
         SourceSecurityGroupId:
           Fn::GetAtt:
-          - DBSecurityGroup
+          - LambdaSecurityGroup
           - GroupId
+  LambdaSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow Lambda to access RDS
+      VpcId:
+        Ref: VpcId
   InventoryDB:
     Type: AWS::RDS::DBInstance
     Properties:
@@ -69,14 +58,22 @@ Resources:
         - DBSecurityGroup
         - GroupId
       PubliclyAccessible: false
-      StorageType: gp2
-      MultiAZ: false
+      DBSubnetGroupName:
+        Ref: DBSubnetGroup
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Subnet group for RDS
+      SubnetIds:
+        Ref: SubnetIds
   OrderInventoryApi:
     Type: AWS::Serverless::Function
     Properties:
+      MemorySize: 1024
+      Timeout: 90
       FunctionName: order-inventory-fastapi
       PackageType: Image
-      ImageUri: 585008049375.dkr.ecr.eu-north-1.amazonaws.com/order-inventory:latest
+      ImageUri: 585008049375.dkr.ecr.eu-north-1.amazonaws.com/order-inventory:20250410120016
       VpcConfig:
         SecurityGroupIds:
         - Fn::GetAtt:
@@ -104,11 +101,9 @@ Resources:
             Method: ANY
 Outputs:
   ApiEndpoint:
-    Description: API Gateway endpoint URL
     Value:
       Fn::Sub: https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/
   DatabaseEndpoint:
-    Description: RDS Connection Endpoint
     Value:
       Fn::GetAtt:
       - InventoryDB

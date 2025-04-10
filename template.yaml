@@ -5,55 +5,40 @@ Description: IKEA-like Order Inventory System with RDS PostgreSQL
 Parameters:
   DBUsername:
     Type: String
-    Default: admin
+    Default: dbemanager
     NoEcho: true
   DBPassword:
     Type: String
     NoEcho: true
-    MinLength: "8" 
-    Description: "RDS master password (min 8 characters)"
+    MinLength: "8"
   DBName:
     Type: String
     Default: ikea_inventory
   VpcId:
     Type: AWS::EC2::VPC::Id
-    Default: "vpc-024a655cafb2368b1" # aws ec2 describe-vpcs --query 'Vpcs[].VpcId'
-    Description: "Select your VPC"
+    Default: vpc-024a655cafb2368b1
   SubnetIds:
     Type: List<AWS::EC2::Subnet::Id>
-    Default: "subnet-0537b9d0c4302acac,subnet-016accb336476c651" # aws ec2 describe-subnets --query 'Subnets[].SubnetId'
-    Description: "Select at least two private subnets"
-
-Globals:
-  Function:
-    Timeout: 30
-    Runtime: python3.12
-    MemorySize: 512
-    Environment:
-      Variables:
-        ENV: production
+    Default: "subnet-0537b9d0c4302acac,subnet-016accb336476c651"
 
 Resources:
-  # Database Security Group
   DBSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow database access from Lambda"
       VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 5432
+          ToPort: 5432
+          SourceSecurityGroupId: !GetAtt LambdaSecurityGroup.GroupId
 
-  # Lambda Security Group
   LambdaSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
       GroupDescription: "Allow Lambda to access RDS"
       VpcId: !Ref VpcId
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: 5432
-          ToPort: 5432
-          SourceSecurityGroupId: !GetAtt DBSecurityGroup.GroupId
 
-  # RDS PostgreSQL Instance
   InventoryDB:
     Type: AWS::RDS::DBInstance
     Properties:
@@ -67,25 +52,22 @@ Resources:
       VPCSecurityGroups:
         - !GetAtt DBSecurityGroup.GroupId
       PubliclyAccessible: false
-      StorageType: gp2
-      MultiAZ: false
+      DBSubnetGroupName: !Ref DBSubnetGroup
 
-  # Psycopg2Layer:
-  #   Type: AWS::Serverless::LayerVersion
-  #   Properties:
-  #     # LayerName: psycopg2-layer
-  #     ContentUri: layer/psycopg2-layer.zip
-  #     CompatibleRuntimes:
-  #       - python3.12
-  #     RetentionPolicy: Delete
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: "Subnet group for RDS"
+      SubnetIds: !Ref SubnetIds
 
-  # Lambda Function
   OrderInventoryApi:
     Type: AWS::Serverless::Function
     Properties:
+      MemorySize: 1024  
+      Timeout: 90      
       FunctionName: order-inventory-fastapi
       PackageType: Image
-      ImageUri: 585008049375.dkr.ecr.eu-north-1.amazonaws.com/order-inventory:latest
+      ImageUri: 585008049375.dkr.ecr.eu-north-1.amazonaws.com/order-inventory:20250410120016
       VpcConfig:
         SecurityGroupIds:
           - !GetAtt LambdaSecurityGroup.GroupId
@@ -103,20 +85,8 @@ Resources:
             Path: /{proxy+}
             Method: ANY
 
-  # # Dependencies Layer
-  # AppDependenciesLayer:
-  #   Type: AWS::Serverless::LayerVersion
-  #   Properties:
-  #     LayerName: fastapi-dependencies
-  #     Description: "FastAPI and SQLModel dependencies"
-  #     ContentUri: layer/fastapi-deps-layer.zip
-  #     CompatibleRuntimes:
-  #       - python3.12
-
 Outputs:
   ApiEndpoint:
-    Description: "API Gateway endpoint URL"
     Value: !Sub "https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/"
   DatabaseEndpoint:
-    Description: "RDS Connection Endpoint"
     Value: !GetAtt InventoryDB.Endpoint.Address
