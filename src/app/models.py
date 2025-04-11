@@ -87,9 +87,9 @@ class DeliveryMethod(str, Enum):
     INDOOR_DELIVERY = "indoor"       # 800 SEK (fixed)
 
 class Zipcode(str, Enum): # zip code within the range of deliver,here three are all in Malmö 21109 = "55.6094° N, 12.9847° E"
-    zipcode: int
-    longitude: int      # "55.6015° N, 13.0315° E"
-    latitude: int       #"55.5656° N, 13.0443° E"
+    zipcode: str = Field(primary_key=True)
+    # longitude: int      # "55.6015° N, 13.0315° E"
+    # latitude: int       #"55.5656° N, 13.0443° E"
 
 class UserBase(SQLModel):
     fname: str = Field(nullable=False, min_length=1, max_length=50)
