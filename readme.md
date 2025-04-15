@@ -1,4 +1,4 @@
-# 🛒 Scalable Order System — FastAPI + AWS Lambda + RDS
+# 🛒 Order_Inventory System — FastAPI + AWS Lambda + RDS
 
 **Author:** Jie Gao (Jessi)  
 📅 **Date:** April 2025
@@ -17,13 +17,11 @@ Original Tech Stack:
 
 - 🐍 **FastAPI** (Python) + Mangum
 - 🛢️ **PostgreSQL** (AWS RDS)
-- 🔐 JWT (admin-free)
+- 🔐 JWT (User and Admin-free)
 - ☁️ **Serverless Application Model** (SAM)
 - 🧱 Deployed using AWS Lambda & CloudFormation
 
 ---
-
-## 🧠 Assumptions for MVP Logic
 
 ### Assumption 1: Regional Delivery Logic
 
