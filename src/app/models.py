@@ -31,7 +31,6 @@ class WarehouseAddress(str, Enum):
     MARKNADSVAGEN = "Marknadsvägen (56.092430690778045, 12.76271609744993)"    # Helsingbor
     HANDELSVAGEN = "Handelsvägen （56.55169461274043, 14.157970024464651）"  # Älmhult
 
-
 class Warehouse(SQLModel, table=True):
     warehouse_id: str = Field(primary_key=True)  # Renamed from "id"
     name: str
@@ -46,14 +45,13 @@ class WarehouseCreate(SQLModel):
     served_zipcodes: list[str]
     
 class WarehouseRead(SQLModel):
-    id: str
+    id: Optional[str] = None
     name: str
     allows_self_service: bool
     served_zipcodes: list[str]
 
     class Config:  # SQLModel/Pydantic v1 syntax
         orm_mode = True  # Critical for ORM->Pydantic conversion
-
 
 class Stock(SQLModel, table=True):
     product_id: str = Field(foreign_key="product.id", primary_key=True)
@@ -89,9 +87,9 @@ class DeliveryMethod(str, Enum):
     INDOOR_DELIVERY = "indoor"       # 800 SEK (fixed)
 
 class Zipcode(str, Enum): # zip code within the range of deliver,here three are all in Malmö 21109 = "55.6094° N, 12.9847° E"
-    zipcode: int
-    longitude: int      # "55.6015° N, 13.0315° E"
-    latitude: int       #"55.5656° N, 13.0443° E"
+    zipcode: str = Field(primary_key=True)
+    # longitude: int      # "55.6015° N, 13.0315° E"
+    # latitude: int       #"55.5656° N, 13.0443° E"
 
 class UserBase(SQLModel):
     fname: str = Field(nullable=False, min_length=1, max_length=50)

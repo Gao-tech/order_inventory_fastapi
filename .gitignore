@@ -1,4 +1,71 @@
-__pycache__
-venv/
-.env
-python/
+# Ignore AWS credentials and sensitive SAM configs
+.aws/
+*.env
+.env*
+venv
+samconfig.toml
+template.yaml
+
+# Ignore Python cache and build folders
+__pycache__/
+__init__
+*.pyc
+*.pyo
+*.pyd
+build/
+dist/
+
+# Ignore Lambda Layers and zip files
+layer.zip
+*.zip
+layer/
+
+# Ignore Docker build cache
+*.egg-info/
+*.dockerfile
+.dockerignore
+
+
+# Virtual environments
+venv*/
+env/
+
+# Dependency folders
+site-packages/
+*.egg-info/
+
+# Test/coverage files
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Compiled binaries/libs
+*.so
+*.dll
+*.dylib
+*.a
+*.lib
+*.exe
+
+# Kerberos/GSSAPI files (seen in your staged files)
+*krb5*
+*gssapi*
+
+# VS Code
+.vscode/
+
+# PyCharm
+.idea/
+*.iml
+
+# Temp files
+*.swp
+*.swo
+
+# Wheel/installation metadata
+METADATA
+INSTALLER
+RECORD
+REQUESTED
+top_level.txt
+WHEEL

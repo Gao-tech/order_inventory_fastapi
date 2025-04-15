@@ -15,9 +15,9 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 handler = Mangum(app)
 
-@app.get("/", response_class=HTMLResponse)
-async def hello():
-    return "<h1 style='color: teal;'>Hello to the order and inventory platform!</h1>"
+# @app.get("/", response_class=HTMLResponse)
+# async def hello():
+#     return "<h1 style='color: teal;'>Hello to the order and inventory platform!</h1>"
 
 
 app.include_router(product.router)
