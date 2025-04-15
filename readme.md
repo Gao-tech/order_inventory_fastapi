@@ -1,8 +1,7 @@
 # 🛒 Scalable Order System — FastAPI + AWS Lambda + RDS
 
 **Author:** Jie Gao (Jessi)  
-📅 **Date:** April 2025  
-📌 **Status:** #OPEN_TO_WORK
+📅 **Date:** April 2025
 
 ---
 
@@ -60,7 +59,12 @@ For this project:
 
 Six core tables reflect the main business logic:
 
-User # Stores user or guest details Product # Main catalog of items (single ID per product) Warehouse # Regional fulfillment centers Stock # Inventory quantity per product per warehouse Order # Contains address, delivery method, etc. OrderItem # Quantity per product in the order
+User # Stores user or guest details
+Product # Main catalog of items (single ID per product)
+Warehouse # Regional fulfillment centers
+Stock # Inventory quantity per product per warehouse
+Order # Contains address, delivery method, etc.
+OrderItem # Quantity per product in the order
 
 - ✔️ Stock is allocated based on **nearest warehouse**
 - ✔️ Orders can be created by **guests** (no login required)
@@ -84,7 +88,6 @@ User # Stores user or guest details Product # Main catalog of items (single ID p
 
 - ✅ Create guest orders
 - ✅ Add items from stock
-- ✅ Get delivery ETA
 - ✅ Verify stock reduction from correct warehouse
 
 ---
@@ -94,18 +97,12 @@ User # Stores user or guest details Product # Main catalog of items (single ID p
 > “I thought: let’s scale this up and deploy it to the cloud!”  
 > Spoiler: **the cloud had other plans.**
 
-The goal was to build **true serverless logic**, but integrating:
+The goal was to build **serverless logic**, and integrating:
 
-- RDS (which isn't cold-start friendly)
+- RDS (hold PostgreSQL database)
 - Region-aware warehouse logic
 - SQL + Lambda latency optimization
 
 ...meant more configuration and tuning than expected — **a great learning journey**.
 
 ---
-
-## 📌 Future Improvements
-
-- [ ] Retry logic for cold start + RDS issues
-- [ ] Dynamic cost and ETA modeling with geolocation APIs
-- [ ] Full cart-to-order pipeline with user sessions
