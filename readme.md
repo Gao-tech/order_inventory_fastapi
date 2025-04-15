@@ -1,57 +1,111 @@
-# 📦 Warehouse Inventory & Order System
+# 🛒 Scalable Order System — FastAPI + AWS Lambda + RDS
 
-![Built with FastAPI](https://img.shields.io/badge/Built%20with-FastAPI-green?style=flat-square)
-![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL-blue?style=flat-square)
-
-> A backend system for managing product inventory across multiple warehouses, tracking user orders, and handling delivery logistics.
-
-This project simulates a furniture retailer backend (like IKEA), including product series, warehouse zones, delivery methods, and customer orders. It's built using **FastAPI + SQLModel + PostgreSQL**, with clean separation between data models, business logic, and API routes.
+**Author:** Jie Gao (Jessi)  
+📅 **Date:** April 2025  
+📌 **Status:** #OPEN_TO_WORK
 
 ---
 
-## 📚 Table of Contents
+## 🧱 Project Goal
 
-- [Overview](#overview)
-- [Key Components](#key-components)
-- [Data Modeling and Relationships](#data-modeling-and-relationships)
-- [How to Start](#how-to-start)
-- [Running Tests](#running-tests)
-- [Future Enhancements](#future-enhancements)
+Build a **scalable backend system** to support:
 
----
+- ✅ Real-time stock allocation
+- 🚚 Region-based delivery from nearest warehouse
+- 🛒 Guest checkout (no login required)
 
-## 🚀 Overview
+Original Tech Stack:
 
-This backend system provides the following features:
-
-- Register users and track their orders.
-- Model physical **warehouses** with delivery zones and self-service options.
-- Manage **product inventory** across warehouses using a stock system.
-- Support **order placements** with various delivery methods and costs.
-- Use **enum-based constraints** for categories, delivery types, and locations.
+- 🐍 **FastAPI** (Python) + Mangum
+- 🛢️ **PostgreSQL** (AWS RDS)
+- 🔐 JWT (admin-free)
+- ☁️ **Serverless Application Model** (SAM)
+- 🧱 Deployed using AWS Lambda & CloudFormation
 
 ---
 
-## 🧱 Key Components
+## 🧠 Assumptions for MVP Logic
 
-- **Warehouse**: Tracks stock, zip code zones, and if self-pickup is allowed.
-- **Product**: Belongs to a category and optional product series.
-- **Stock**: Intermediate table between Warehouse and Product.
-- **User**: Customers placing orders.
-- **Order + OrderItem**: Customer purchases and which products are bought.
-- **Enums**: Used to standardize categories, delivery methods, locations, etc.
+### Assumption 1: Regional Delivery Logic
+
+> A product is always delivered from the nearest warehouse, based on zipcode.
+
+- 📦 **Fixed delivery cost** by method:
+  - Self-service
+  - Curbside
+  - In-door
+- 🕒 **Standardized delivery time**: 3 days from order
+
+✅ This simplifies modeling by removing the need for dynamic cost/time calculation in the MVP.
 
 ---
 
-## 🔗 Data Modeling and Relationships
+### Assumption 2: Product ID System
 
-### 🏢 Warehouse
+> Inspired by IKEA’s system, each product has a unique **“Article number”**
 
-```python
-class Warehouse(SQLModel, table=True):
-    warehouse_id: str
-    name: str
-    allows_self_service: bool
-    served_zipcodes: list[str]
-    stocks: list["Stock"] = Relationship(back_populates="warehouse")
-```
+Example:
+Product ID: 493.857.51 # Complete Bed ├── Frame: 704.894.50 └── Mattress: 604.894.55
+
+For this project:
+
+- Only the **parent product ID** (e.g., `493.857.51`) is used
+- Keeps schema simple and focused
+
+🔧 Future work can support bundles and sub-items with one-to-many relationships.
+
+---
+
+## 🗂 Relational Table Design
+
+Six core tables reflect the main business logic:
+
+User # Stores user or guest details Product # Main catalog of items (single ID per product) Warehouse # Regional fulfillment centers Stock # Inventory quantity per product per warehouse Order # Contains address, delivery method, etc. OrderItem # Quantity per product in the order
+
+- ✔️ Stock is allocated based on **nearest warehouse**
+- ✔️ Orders can be created by **guests** (no login required)
+- ✔️ Product availability is **region-aware**
+
+---
+
+## 🔄 Order Flow (Including Guest Users)
+
+1. Guest places order with delivery address
+2. Backend:
+   - Finds nearest warehouse based on zipcode
+   - Checks stock availability
+   - Calculates cost & delivery ETA (fixed rules)
+3. Order stored in database
+4. JWT is issued **only if needed** (for admin APIs)
+
+---
+
+## 🔬 Tested via Postman
+
+- ✅ Create guest orders
+- ✅ Add items from stock
+- ✅ Get delivery ETA
+- ✅ Verify stock reduction from correct warehouse
+
+---
+
+## ☁️ Cloud Deployment Experience
+
+> “I thought: let’s scale this up and deploy it to the cloud!”  
+> Spoiler: **the cloud had other plans.**
+
+The goal was to build **true serverless logic**, but integrating:
+
+- RDS (which isn't cold-start friendly)
+- Region-aware warehouse logic
+- SQL + Lambda latency optimization
+
+...meant more configuration and tuning than expected — **a great learning journey**.
+
+---
+
+## 📌 Future Improvements
+
+- [ ] Retry logic for cold start + RDS issues
+- [ ] Dynamic cost and ETA modeling with geolocation APIs
+- [ ] Full cart-to-order pipeline with user sessions
